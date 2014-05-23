@@ -159,6 +159,9 @@ for my $opt (@ARGV) {
     } elsif ($opt =~ /^--with-lua51=(.*)/) {
         $resty_opts{lua_path} = $1;
 
+    } elsif ($opt eq '--without-lua_iconv') {
+        $resty_opts{no_lua_iconv} = 1;
+
     } elsif ($opt eq '--without-lua_cjson') {
         $resty_opts{no_lua_cjson} = 1;
 
@@ -170,6 +173,9 @@ for my $opt (@ARGV) {
 
     } elsif ($opt eq '--without-lua_resty_redis') {
         $resty_opts{no_lua_resty_redis} = 1;
+
+    } elsif ($opt eq '--without-lua_resty_http') {
+        $resty_opts{no_lua_resty_http} = 1;
 
     } elsif ($opt eq '--without-lua_resty_mysql') {
         $resty_opts{no_lua_resty_mysql} = 1;
@@ -706,6 +712,42 @@ _EOC_
                 "\$(MAKE) install$extra_opts";
         }
 
+        unless ($opts->{no_lua_iconv}) {
+            my $dir = auto_complete 'lua-iconv';
+            if (!defined $dir) {
+                die "No lua-iconv found";
+            }
+
+            my $lua_inc;
+            if ($opts->{luajit} || $opts->{luajit_path}) {
+                $lua_inc = $ENV{LUAJIT_INC};
+
+            } else {
+                $lua_inc = $ENV{LUA_INC};
+            }
+
+            my $extra_opts = " DESTDIR=\$(DESTDIR) " .
+                "INSTALL_PATH=$lualib_prefix";
+
+            if ($opts->{debug}) {
+                $extra_opts .= " CFLAGS=\"-g -I$lua_inc -O -fpic -fomit-frame-pointer\"";
+            } else {
+                $extra_opts .= " CFLAGS=\"-g -I$lua_inc -fpic -fomit-frame-pointer\"";
+            }
+
+            if (defined $cc) {
+                $extra_opts .= " CC='$cc'";
+            } else {
+                $extra_opts .= " CC=gcc";
+            }
+
+            push @make_cmds, "cd $root_dir/build/$dir && ".
+                "\$(MAKE)$extra_opts";
+
+            push @make_install_cmds, "cd $root_dir/build/$dir && " .
+                "\$(MAKE) install$extra_opts";
+        }
+
         unless ($opts->{no_lua_redis_parser}) {
             my $dir = auto_complete 'lua-redis-parser';
             if (!defined $dir) {
@@ -800,7 +842,7 @@ _EOC_
                 "\$(MAKE) install$extra_opts";
         }
 
-        for my $key (qw(dns memcached redis mysql string upload websocket
+        for my $key (qw(dns memcached redis http mysql string upload websocket
                         lock core upstream_healthcheck))
         {
             unless ($opts->{"no_lua_resty_$key"}) {
@@ -921,6 +963,7 @@ _EOC_
   --without-lua_resty_dns            disable the lua-resty-dns library
   --without-lua_resty_memcached      disable the lua-resty-memcached library
   --without-lua_resty_redis          disable the lua-resty-redis library
+  --without-lua_resty_http           disable the lua-resty-http library
   --without-lua_resty_mysql          disable the lua-resty-mysql library
   --without-lua_resty_upload         disable the lua-resty-upload library
   --without-lua_resty_upstream_healthcheck

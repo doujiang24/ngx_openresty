@@ -242,9 +242,12 @@ echo "$info_txt applying the setting_args_invalidates_uri patch for nginx $ver"
 patch -p1 < $root/patches/nginx-$ver-setting_args_invalidates_uri.patch || exit 1
 echo
 
-echo "$info_txt applying the slab_defrag patch for nginx"
-patch -p1 < $root/patches/nginx-$main_ver-slab_defrag.patch || exit 1
-echo
+answer=`$root/util/ver-ge "$main_ver" 1.7.0`
+if [ "$answer" = "Y" ]; then
+    echo "$info_txt applying the slab_defrag patch for nginx"
+    patch -p1 < $root/patches/nginx-$main_ver-slab_defrag.patch || exit 1
+    echo
+fi
 
 rm -f *.patch || exit 1
 
@@ -459,6 +462,15 @@ mv luajit2-* LuaJIT-$ver || exit 1
 
 #################################
 
+ver=7
+$root/util/get-tarball "https://github.com/ittner/lua-iconv/archive/lua-iconv-$ver.tar.gz" -O "lua-iconv-$ver.tar.gz" || exit 1
+tar -xzf lua-iconv-$ver.tar.gz || exit 1
+mv lua-iconv-lua-iconv* lua-iconv-$ver || exit 1
+cd lua-iconv-$ver || exit 1
+cd ..
+
+#################################
+
 ver=2.1.0.1
 $root/util/get-tarball "https://github.com/openresty/lua-cjson/archive/$ver.tar.gz" -O "lua-cjson-$ver.tar.gz" || exit 1
 tar -xzf lua-cjson-$ver.tar.gz || exit 1
@@ -486,6 +498,13 @@ ver=0.11
 $root/util/get-tarball "https://github.com/openresty/lua-resty-dns/tarball/v$ver" -O "lua-resty-dns-$ver.tar.gz" || exit 1
 tar -xzf lua-resty-dns-$ver.tar.gz || exit 1
 mv openresty-lua-resty-dns-* lua-resty-dns-$ver || exit 1
+
+#################################
+
+ver=0.05
+$root/util/get-tarball "https://github.com/doujiang24/lua-resty-http/tarball/v$ver" -O "lua-resty-http-$ver.tar.gz" || exit 1
+tar -xzf lua-resty-http-$ver.tar.gz || exit 1
+mv doujiang24-lua-resty-http-* lua-resty-http-$ver || exit 1
 
 #################################
 
